@@ -1,175 +1,184 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
+import dynamic from "next/dynamic";
 import { cn } from "@/app/lib/cn";
 
-// --- KONFIGURACJA DANYCH ---
-// Precyzyjne koordynaty (w % szerokości/wysokości kontenera)
-const NODES = [
-  { id: "NYC", x: 29, y: 35, label: "US_EAST" },
-  { id: "LON", x: 49, y: 26, label: "EU_WEST" },
-  { id: "WAW", x: 53.5, y: 27, label: "WAW_MAIN" }, // Nasza baza
-  { id: "TKY", x: 86, y: 32, label: "ASIA_HUB" },
-  { id: "SGP", x: 79, y: 55, label: "SGP_NODE" },
-  { id: "CPT", x: 53, y: 75, label: "AFR_LINK" },
+// Import Globe (SSR false)
+const Globe = dynamic(() => import("react-globe.gl"), { ssr: false });
+
+// --- KROK 1: Baza Danych Miast i Ciekawostek ---
+// Możesz tu dodawać dowolne miasta.
+const CITIES = [
+  {
+    text: "WARSZAWA",
+    lat: 52.2297,
+    lng: 21.0122,
+    fact: "Pałac Kultury i Nauki ma drugie co do wielkości zegary milenijne w Europie na szczycie wieży.",
+  },
+  {
+    text: "NOWY JORK",
+    lat: 40.7128,
+    lng: -74.006,
+    fact: "W nowojorskim metrze żyje około 15 152 form życia (od bakterii po insekty), których nauka wcześniej nie znała.",
+  },
+  {
+    text: "LOS ANGELES",
+    lat: 34.0522,
+    lng: -118.2437,
+    fact: "Pierwotna nazwa miasta to: 'El Pueblo de Nuestra Señora la Reina de los Ángeles del Río Porciúncula'.",
+  },
+  {
+    text: "CHICAGO",
+    lat: 41.8781,
+    lng: -87.6298,
+    fact: "Rzeka Chicago jest jedyną rzeką na świecie, której kierunek przepływu inżynierowie trwale odwrócili dla higieny miasta.",
+  },
+  {
+    text: "SAN FRANCISCO",
+    lat: 37.7749,
+    lng: -122.4194,
+    fact: "Most Golden Gate miał być pomalowany w żółto-czarne pasy (jak trzmiel), aby był widoczny we mgle. Architekt się sprzeciwił.",
+  },
+  {
+    text: "LONDYN",
+    lat: 51.5074,
+    lng: -0.1278,
+    fact: "W Londynie jest nielegalne umieranie w Pałacu Westminsterskim (siedzibie parlamentu).",
+  },
+  {
+    text: "BERLIN",
+    lat: 52.52,
+    lng: 13.405,
+    fact: "Berlin ma więcej mostów (ok. 1700) niż Wenecja.",
+  },
+  {
+    text: "AMSTERDAM",
+    lat: 52.3676,
+    lng: 4.9041,
+    fact: "Co roku z kanałów w Amsterdamie wyławia się około 12-15 tysięcy rowerów.",
+  },
+  {
+    text: "MADRYT",
+    lat: 40.4168,
+    lng: -3.7038,
+    fact: "To jedyna europejska stolica założona przez Muzułmanów (pierwotnie: Mayrit).",
+  },
+  {
+    text: "BARCELONA",
+    lat: 41.3851,
+    lng: 2.1734,
+    fact: "Plaże w Barcelonie są sztuczne. Stworzono je dopiero na Igrzyska Olimpijskie w 1992 roku.",
+  },
+  {
+    text: "TOKIO",
+    lat: 35.6762,
+    lng: 139.6503,
+    fact: "W Tokio są kawiarnie, gdzie płacisz za czas spędzony z kotami, sowami, a nawet jeżami.",
+  },
 ];
 
-export function MatrixWorldMap() {
+export function MatrixWorldMap({ className }: { className?: string }) {
+  const globeEl = useRef<any>(null); // Poprawiony ref
   const [mounted, setMounted] = useState(false);
+
+  // Stan do przechowywania wybranego miasta
+  const [selectedCity, setSelectedCity] = useState<(typeof CITIES)[0] | null>(
+    null
+  );
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    if (globeEl.current) {
+      globeEl.current.controls().autoRotate = true;
+      globeEl.current.controls().autoRotateSpeed = 0.5; // Lekko przyspieszyłem, żeby szybciej zobaczyć inne miasta
+      globeEl.current.controls().enableZoom = false;
+      globeEl.current.pointOfView({ lat: 20, lng: 0, altitude: 2.5 });
+    }
+  }, [mounted]);
+
+  if (!mounted)
+    return (
+      <div className="w-full h-full min-h-[500px] bg-black/20 animate-pulse rounded-xl" />
+    );
+
   return (
-    <div className="relative w-full h-full min-h-[400px] flex items-center justify-center select-none pointer-events-none overflow-hidden">
-      {/* 1. KONTENER GŁÓWNY */}
-      <div className="relative w-full max-w-4xl aspect-[1.8/1] group">
-        {/* TŁO SIATKI (GRID) - Bardziej subtelne */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.03)_1px,transparent_1px)] bg-[size:40px_40px] border-x border-emerald-500/10" />
+    <div
+      className={cn(
+        "relative w-full h-full min-h-[500px] flex items-center justify-center overflow-hidden rounded-xl border border-emerald-500/20 bg-black",
+        className
+      )}
+    >
+      <div className="absolute inset-0 cursor-move">
+        <Globe
+          ref={globeEl}
+          backgroundColor="rgba(0,0,0,0)"
+          globeImageUrl="/textures/lights.jpg"
+          atmosphereColor="#3a7bd5"
+          atmosphereAltitude={0.15}
+          // --- KONFIGURACJA PUNKTÓW ---
+          labelsData={CITIES}
+          labelLat={(d: any) => d.lat}
+          labelLng={(d: any) => d.lng}
+          labelText={(d: any) => d.text}
+          labelSize={1.5}
+          labelDotRadius={0.6}
+          // Kolor: żółty dla wybranego, biały dla reszty
+          labelColor={(d: any) => (d === selectedCity ? "#fbbf24" : "white")}
+          labelResolution={2}
+          // --- INTERAKCJA ---
+          onLabelClick={(d: any) => {
+            setSelectedCity(d);
+            // Opcjonalnie: Zatrzymaj obrót po kliknięciu, żeby łatwiej czytać
+            if (globeEl.current) {
+              globeEl.current.controls().autoRotate = false;
+            }
+          }}
+          // Opcjonalnie: Wznów obrót po kliknięciu w tło
+          onGlobeClick={() => {
+            setSelectedCity(null);
+            if (globeEl.current) {
+              globeEl.current.controls().autoRotate = true;
+            }
+          }}
+        />
+      </div>
 
-        {/* 2. MAPA ŚWIATA (High-Tech Dot Matrix) */}
-        <svg
-          viewBox="0 0 1000 500"
-          className="absolute inset-0 w-full h-full drop-shadow-[0_0_10px_rgba(16,185,129,0.3)]"
-        >
-          <defs>
-            {/* WZÓR PUNKTÓW (To sprawia, że mapa jest z kropek) */}
-            <pattern
-              id="grid-pattern"
-              x="0"
-              y="0"
-              width="6"
-              height="6"
-              patternUnits="userSpaceOnUse"
+      {/* --- CYBER-OKNO Z CIEKAWOSTKĄ --- */}
+      {selectedCity && (
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] bg-black/90 border border-emerald-500 p-6 shadow-[0_0_30px_rgba(16,185,129,0.3)] backdrop-blur-md z-10 rounded-sm">
+          <div className="flex justify-between items-start mb-4 border-b border-emerald-500/30 pb-2">
+            <h3 className="text-emerald-400 font-mono text-lg tracking-widest font-bold">
+              DATA_LINK: {selectedCity.text}
+            </h3>
+            <button
+              onClick={() => {
+                setSelectedCity(null);
+                if (globeEl.current)
+                  globeEl.current.controls().autoRotate = true;
+              }}
+              className="text-emerald-500/50 hover:text-emerald-400 transition-colors font-mono text-xs"
             >
-              <circle cx="2" cy="2" r="1.2" className="fill-emerald-500/30" />
-            </pattern>
-
-            {/* MASKA - Używamy kształtów kontynentów jako przycięcia dla wzoru kropek */}
-            <mask id="world-mask">
-              <path
-                fill="white"
-                d="M270,120 Q200,80 150,150 T50,200 L60,250 L160,450 L300,380 L350,220 L270,120 Z 
-                   M450,100 L600,80 L650,200 L550,280 L480,250 L420,150 Z
-                   M480,280 L600,450 L700,350 L620,220 Z
-                   M620,100 L900,100 L950,250 L800,400 L700,300 L650,200 Z
-                   M800,380 L900,450 L950,420 L850,320 Z"
-              />
-              {/* Tutaj stosujemy "oszukane" uproszczone ścieżki, które wyglądają PRO,
-                  bo są zamieniane na kropki przez pattern. Dzięki temu plik jest lekki. */}
-            </mask>
-          </defs>
-
-          {/* RYSOWANIE MAPY PRZEZ MASKĘ */}
-          {/* To jest klucz: Wielki prostokąt wypełniony kropkami, przycięty do kształtu świata */}
-          <rect
-            x="0"
-            y="0"
-            width="100%"
-            height="100%"
-            fill="url(#grid-pattern)"
-            mask="url(#world-mask)"
-            className="opacity-60"
-          />
-
-          {/* POŁĄCZENIA (LINES) */}
-          <g className="stroke-emerald-400/40 stroke-[1] fill-none">
-            {/* Linie z Warszawy do innych hubów */}
-            {NODES.map((node, i) => {
-              if (node.id === "WAW") return null;
-              // Koordynaty startowe (Warszawa)
-              const startX = NODES[2].x * 10;
-              const startY = NODES[2].y * 5;
-              // Koordynaty końcowe
-              const endX = node.x * 10;
-              const endY = node.y * 5;
-
-              // Obliczanie łuku (Bezier Curve)
-              const midX = (startX + endX) / 2;
-              // Im dalszy punkt, tym wyższy łuk
-              const dist = Math.abs(endX - startX);
-              const midY = Math.min(startY, endY) - dist * 0.2;
-
-              return (
-                <path
-                  key={node.id}
-                  d={`M${startX},${startY} Q${midX},${midY} ${endX},${endY}`}
-                  strokeDasharray="4,4"
-                  className="animate-[dash_30s_linear_infinite]"
-                />
-              );
-            })}
-          </g>
-        </svg>
-
-        {/* 3. SKANER RADAROWY */}
-        {/* Pionowa linia przelatująca przez mapę + poświata */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-0 bottom-0 w-[40px] bg-gradient-to-r from-transparent via-emerald-500/10 to-transparent -skew-x-12 animate-[scan_5s_linear_infinite]" />
-          <div className="absolute top-0 bottom-0 w-[1px] bg-emerald-400/50 shadow-[0_0_20px_#10b981] animate-[scan_5s_linear_infinite]" />
-        </div>
-
-        {/* 4. PUNKTY (NODES) HTML/CSS */}
-        {/* Renderujemy je nad SVG dla łatwiejszego stylowania */}
-        {NODES.map((node) => (
-          <div
-            key={node.id}
-            className="absolute -translate-x-1/2 -translate-y-1/2 group"
-            style={{ left: `${node.x}%`, top: `${node.y}%` }}
-          >
-            {/* Punkt centralny */}
-            <div className="relative flex items-center justify-center w-6 h-6">
-              {/* Ping animation */}
-              <div
-                className={cn(
-                  "absolute inset-0 rounded-full bg-emerald-500/40 animate-ping",
-                  node.id === "WAW"
-                    ? "animation-duration-[1s]"
-                    : "animation-duration-[3s]"
-                )}
-              />
-              {/* Core dot */}
-              <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full shadow-[0_0_10px_rgba(52,211,153,0.8)] z-10" />
-
-              {/* Ring wokół Warszawy */}
-              {node.id === "WAW" && (
-                <div className="absolute inset-[-4px] border border-emerald-500/50 rounded-full animate-[spin_4s_linear_infinite]" />
-              )}
-            </div>
-
-            {/* Label (Etykieta) */}
-            <div
-              className={cn(
-                "absolute top-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 transition-all duration-500",
-                node.id === "WAW"
-                  ? "opacity-100 scale-100"
-                  : "opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100"
-              )}
-            >
-              <div className="h-4 w-[1px] bg-emerald-500/30" />{" "}
-              {/* Linia łącząca kropkę z tekstem */}
-              <div className="px-2 py-1 bg-black/90 border border-emerald-500/40 text-[9px] text-emerald-400 font-bold tracking-widest uppercase whitespace-nowrap shadow-lg backdrop-blur-sm">
-                {node.label}
-              </div>
-            </div>
+              [ZAMKNIJ]
+            </button>
           </div>
-        ))}
-
-        {/* 5. DEKORACJE HUD (Narożniki) */}
-        {/* Lewy górny */}
-        <div className="absolute top-0 left-0 w-16 h-16 border-l-2 border-t-2 border-emerald-500/30 rounded-tl-lg" />
-        {/* Prawy dolny */}
-        <div className="absolute bottom-0 right-0 w-16 h-16 border-r-2 border-b-2 border-emerald-500/30 rounded-br-lg" />
-
-        {/* Dół - statystyki */}
-        <div className="absolute bottom-4 left-8 text-[10px] text-emerald-600/70 font-mono flex gap-6">
-          <span className="flex items-center gap-2">
-            <span className="w-1 h-1 bg-emerald-500 rounded-full animate-pulse" />
-            SERVER_STATUS: ACTIVE
-          </span>
-          <span className="hidden sm:inline">TRAFFIC: 450 TB/s</span>
+          <p className="text-gray-300 font-mono text-sm leading-relaxed typing-effect">
+            {selectedCity.fact}
+          </p>
+          <div className="mt-4 text-[10px] text-emerald-500/40 text-right font-mono">
+            COORDS: {selectedCity.lat.toFixed(2)} |{" "}
+            {selectedCity.lng.toFixed(2)}
+          </div>
         </div>
+      )}
+
+      {/* Nakładka UI */}
+      <div className="absolute bottom-6 right-6 font-mono text-emerald-500/50 text-[10px] pointer-events-none text-right">
+        <div>STATUS: {selectedCity ? "DATA_RETRIVED" : "SCANNING..."}</div>
+        <div>OBJECTS: {CITIES.length}</div>
       </div>
     </div>
   );

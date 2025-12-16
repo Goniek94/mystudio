@@ -6,10 +6,8 @@ import { portfolioData } from "@/app/components/data/content";
 import { ScrambleText } from "@/app/components/ui/ScrambleText";
 import { MatrixBackground } from "@/app/components/ui/MatrixBackground";
 import { Logo } from "@/app/components/ui/Logo";
-// Importujemy nowy komponent mapy
 import { MatrixWorldMap } from "@/app/components/ui/MatrixWorldMap";
 
-// --- TYPY I KONFIGURACJA ---
 type SectionId =
   | "home"
   | "services"
@@ -19,7 +17,6 @@ type SectionId =
   | "contact";
 type Language = "pl" | "en";
 
-// Słownik tłumaczeń
 const CONTENT = {
   pl: {
     menu: {
@@ -55,7 +52,6 @@ const CONTENT = {
   },
 };
 
-// --- GŁÓWNY KOMPONENT STRONY ---
 export default function Home() {
   const [activeSection, setActiveSection] = useState<SectionId>("home");
   const [lang, setLang] = useState<Language>("pl");
@@ -71,17 +67,13 @@ export default function Home() {
 
   return (
     <main className="relative min-h-screen w-full text-zinc-300 font-mono overflow-hidden selection:bg-emerald-500/30 selection:text-emerald-200">
-      {/* TŁO */}
       <MatrixBackground />
       <div className="fixed inset-0 bg-black/85 -z-10 backdrop-blur-[2px]" />
 
-      {/* UKŁAD STRONY (GRID) */}
       <div className="relative z-10 mx-auto w-full min-h-screen grid grid-cols-1 md:grid-cols-[280px_1fr] lg:grid-cols-[340px_1fr]">
-        {/* --- NAWIGACJA (LEWA STRONA) --- */}
         <aside className="relative md:h-screen md:sticky md:top-0 flex flex-col justify-between p-6 md:p-10 border-r border-emerald-500/20 bg-black/20 backdrop-blur-md z-20">
           <div>
             <Logo className="mb-12" />
-            {/* Przełącznik Języka */}
             <div className="flex items-center gap-4 mb-8 text-xs font-bold tracking-widest font-mono">
               <button
                 onClick={() => setLang("pl")}
@@ -108,7 +100,6 @@ export default function Home() {
               </button>
             </div>
           </div>
-
           <nav className="mt-4 md:mt-0">
             <ul className="flex flex-col gap-3">
               {MENU_ITEMS.map((item) => (
@@ -124,7 +115,7 @@ export default function Home() {
                   >
                     <span
                       className={cn(
-                        "text-xs tracking-[0.2em] uppercase transition-all duration-300 font-medium font-mono",
+                        "text-xs tracking-[0.2em] uppercase transition-all duration-300 font-medium",
                         activeSection === item.id
                           ? "translate-x-3 text-emerald-400 drop-shadow-[0_0_5px_rgba(52,211,153,0.5)]"
                           : "group-hover:translate-x-1"
@@ -137,8 +128,7 @@ export default function Home() {
               ))}
             </ul>
           </nav>
-
-          <div className="hidden md:block text-[9px] text-zinc-600 font-mono border-t border-emerald-500/20 pt-6">
+          <div className="hidden md:block text-[9px] text-zinc-600 border-t border-emerald-500/20 pt-6">
             <div className="flex justify-between items-center mb-1">
               <span>STATUS:</span>
               <span className="text-emerald-500/60 animate-pulse">ONLINE</span>
@@ -146,36 +136,28 @@ export default function Home() {
           </div>
         </aside>
 
-        {/* --- TREŚĆ GŁÓWNA (PRAWA STRONA) --- */}
-        <section className="relative p-6 md:p-12 lg:p-20 xl:p-24 w-full h-screen overflow-y-auto overflow-x-hidden flex flex-col">
-          <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent" />
-          <div className="w-full max-w-[1600px] mx-auto flex-grow flex flex-col justify-center">
-            {/* Nagłówek sekcji (nie na Home) */}
-            {activeSection !== "home" && (
-              <header className="mb-16 border-b border-emerald-500/20 pb-6 animate-in fade-in slide-in-from-top-4 duration-700 font-mono">
-                <p className="text-[10px] text-emerald-600/70 uppercase tracking-[0.4em] mb-2">
-                  // CURRENT_VIEW
-                </p>
-                <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight uppercase">
-                  {CONTENT[lang].menu[activeSection]}
-                </h1>
-              </header>
-            )}
+        <section className="relative w-full h-screen overflow-y-auto overflow-x-hidden flex flex-col">
+          <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent z-50" />
 
-            {/* Renderowanie komponentów sekcji */}
-            <div className="animate-in fade-in zoom-in-95 duration-500">
-              {activeSection === "home" && (
+          <div className="flex-grow flex flex-col">
+            {activeSection === "home" ? (
+              <div className="animate-in fade-in zoom-in-95 duration-500 w-full h-full">
                 <SectionHero
                   lang={lang}
                   onStartClick={() => setActiveSection("services")}
                 />
-              )}
-              {activeSection === "services" && <SectionServices />}
-              {activeSection === "about" && <SectionAbout />}
-              {activeSection === "projects" && <SectionProjects />}
-              {activeSection === "stack" && <SectionStack />}
-              {activeSection === "contact" && <SectionContact />}
-            </div>
+              </div>
+            ) : (
+              <MainContentWrapper title={CONTENT[lang].menu[activeSection]}>
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  {activeSection === "services" && <SectionServices />}
+                  {activeSection === "about" && <SectionAbout />}
+                  {activeSection === "projects" && <SectionProjects />}
+                  {activeSection === "stack" && <SectionStack />}
+                  {activeSection === "contact" && <SectionContact />}
+                </div>
+              </MainContentWrapper>
+            )}
           </div>
         </section>
       </div>
@@ -183,7 +165,29 @@ export default function Home() {
   );
 }
 
-// --- NOWA SEKCJA HOME (Z MAPĄ I TYPOGRAFIĄ HAKERSKĄ) ---
+function MainContentWrapper({
+  children,
+  title,
+}: {
+  children: React.ReactNode;
+  title: string;
+}) {
+  return (
+    <div className="w-full max-w-[1600px] mx-auto p-6 md:p-12 lg:p-20 xl:p-24 flex flex-col justify-center min-h-screen">
+      <header className="mb-16 border-b border-emerald-500/20 pb-6 animate-in fade-in slide-in-from-top-4 duration-700 font-mono">
+        <p className="text-[10px] text-emerald-600/70 uppercase tracking-[0.4em] mb-2">
+          // CURRENT_VIEW
+        </p>
+        <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight uppercase">
+          {title}
+        </h1>
+      </header>
+      {children}
+    </div>
+  );
+}
+
+// --- POPRAWIONA SEKCJA HERO ---
 function SectionHero({
   lang,
   onStartClick,
@@ -194,56 +198,66 @@ function SectionHero({
   const txt = CONTENT[lang].hero;
 
   return (
-    // ZMIANA: flex-col na małych, flex-row na dużych ekranach
-    <div className="flex flex-col lg:flex-row items-center justify-between min-h-[70vh] relative">
-      {/* Tło typograficzne */}
-      <div className="absolute top-0 right-0 text-[10rem] font-black text-white/[0.02] pointer-events-none select-none leading-none -z-10 blur-sm font-mono">
-        INIT
-      </div>
-
-      {/* LEWA STRONA: TEKST HAKERSKI */}
-      <div className="space-y-8 max-w-2xl relative z-10 w-full lg:w-1/2">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-[10px] tracking-widest uppercase mb-4 animate-pulse font-mono">
-          <span className="w-2 h-2 rounded-full bg-emerald-500" />
-          Incoming_Transmission
-        </div>
-
-        <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-[1.1] tracking-tight font-mono">
-          <span className="block text-emerald-500/80 text-3xl md:text-4xl mb-2 font-normal">
-            &gt; {txt.line1}
-          </span>
-          <span className="text-emerald-400 drop-shadow-[0_0_10px_rgba(16,185,129,0.5)] relative">
-            <ScrambleText text={txt.line2} scrambleSpeed={35} />
-            {/* Mrugający kursor */}
-            <span className="animate-[blink_1s_step-end_infinite] ml-1">_</span>
-          </span>
-        </h1>
-
-        <p className="text-lg md:text-xl text-zinc-400 max-w-xl leading-relaxed border-l-2 border-emerald-500/50 pl-6 font-mono">
-          // {txt.sub}
-        </p>
-
-        <div className="pt-8 font-mono">
-          <button
-            onClick={onStartClick}
-            className="group relative px-8 py-4 bg-emerald-500/10 border border-emerald-500 text-emerald-400 hover:bg-emerald-500 hover:text-black font-bold text-sm tracking-[0.2em] uppercase transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_40px_rgba(16,185,129,0.5)]"
-          >
-            {txt.btn}
-          </button>
+    <div className="relative w-full min-h-screen flex items-center overflow-hidden">
+      {/* 1. TŁO - MAPA (Z MASKĄ CSS DLA PŁYNNEGO PRZEJŚCIA) */}
+      <div className="absolute inset-0 z-0">
+        {/* Kluczowa zmiana: [mask-image] 
+            Gradient sprawia, że mapa jest niewidoczna po lewej (transparent) 
+            i stopniowo pojawia się (black) w stronę prawej krawędzi.
+         */}
+        <div className="w-full h-full [mask-image:linear-gradient(to_right,transparent_0%,transparent_10%,black_60%,black_100%)]">
+          <MatrixWorldMap className="w-full h-full opacity-70" />
         </div>
       </div>
 
-      {/* PRAWA STRONA: ANIMOWANA MAPA ŚWIATA */}
-      <div className="w-full lg:w-1/2 h-[400px] lg:h-[500px] relative mt-12 lg:mt-0 flex justify-center lg:justify-end">
-        {/* Wstawiamy nasz nowy komponent mapy */}
-        <MatrixWorldMap />
+      {/* 2. LEWA STRONA (TREŚĆ) */}
+      <div className="relative z-10 w-full lg:w-1/2 p-6 md:p-12 lg:p-20 flex flex-col justify-center h-full pointer-events-none">
+        {/* pointer-events-auto na kontenerze tekstu, żeby dało się klikać przyciski, ale nie blokować tła */}
+        <div className="max-w-xl space-y-8 pointer-events-auto">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/30 bg-black/40 backdrop-blur-sm text-emerald-400 text-[10px] tracking-widest uppercase mb-4 animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            Incoming_Transmission
+          </div>
+
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-[1.1] tracking-tight drop-shadow-xl">
+            <span className="block text-emerald-500/80 text-3xl md:text-4xl mb-2 font-normal">
+              &gt; {txt.line1}
+            </span>
+            <span className="text-emerald-400 drop-shadow-[0_0_20px_rgba(16,185,129,0.6)] relative">
+              <ScrambleText text={txt.line2} scrambleSpeed={35} />
+              <span className="animate-[blink_1s_step-end_infinite] ml-1">
+                _
+              </span>
+            </span>
+          </h1>
+
+          <p className="text-lg md:text-xl text-zinc-300 leading-relaxed border-l-2 border-emerald-500/50 pl-6 bg-gradient-to-r from-black/50 to-transparent py-2">
+            // {txt.sub}
+          </p>
+
+          <div className="pt-8">
+            <button
+              onClick={onStartClick}
+              className="group relative px-8 py-4 bg-emerald-500/10 border border-emerald-500 text-emerald-400 hover:bg-emerald-500 hover:text-black font-bold text-sm tracking-[0.2em] uppercase transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_40px_rgba(16,185,129,0.5)]"
+            >
+              {txt.btn}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Dodatki dekoracyjne */}
+      <div className="absolute bottom-10 left-6 md:left-20 text-[10px] text-emerald-600/50 tracking-widest z-20 font-mono">
+        COORDINATES: 52.2297° N, 21.0122° E [WAW]
+      </div>
+      <div className="absolute top-10 right-10 text-[8rem] font-black text-white/[0.02] pointer-events-none select-none leading-none -z-10 blur-sm font-mono hidden lg:block">
+        SYS
       </div>
     </div>
   );
 }
 
 // --- POZOSTAŁE SEKCJE (BEZ ZMIAN) ---
-
 function SectionAbout() {
   const titles = ["FULLSTACK DEV", "ARCHITECT", "CREATOR"];
   const [idx, setIdx] = useState(0);
@@ -253,7 +267,7 @@ function SectionAbout() {
   }, []);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-12 items-start font-mono">
+    <div className="flex flex-col lg:flex-row gap-12 items-start">
       <div className="flex-1 space-y-8">
         <h2 className="text-4xl font-bold text-white">
           <span className="text-emerald-500">//</span> WHO_AM_I?
@@ -268,11 +282,6 @@ function SectionAbout() {
           stworzenie systemu, który będzie szybki, bezpieczny i gotowy na
           przyszłość.
         </p>
-        <div className="p-6 bg-emerald-900/10 border border-emerald-500/20">
-          <p className="text-sm text-zinc-300">
-            "Technologia jest narzędziem. To wizja napędza zmianę."
-          </p>
-        </div>
       </div>
       <div className="w-full lg:w-1/3 aspect-square bg-zinc-900 border border-zinc-800 flex items-center justify-center relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
@@ -284,7 +293,7 @@ function SectionAbout() {
 
 function SectionServices() {
   return (
-    <div className="space-y-12 font-mono">
+    <div className="space-y-12">
       <p className="text-xl text-emerald-400 max-w-2xl">
         Dostarczamy kompletny ekosystem rozwiązań. Od pierwszej linii kodu po
         wdrożenie na produkcję.
@@ -311,7 +320,7 @@ function SectionServices() {
 
 function SectionProjects() {
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 font-mono">
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
       {portfolioData.projects.map((project, idx) => (
         <article
           key={idx}
@@ -339,7 +348,7 @@ function SectionProjects() {
 
 function SectionStack() {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 font-mono">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       {[
         "React",
         "Next.js",
@@ -363,7 +372,7 @@ function SectionStack() {
 
 function SectionContact() {
   return (
-    <div className="w-full max-w-2xl mx-auto border border-emerald-500/30 p-12 bg-black/60 text-center relative overflow-hidden font-mono">
+    <div className="w-full max-w-2xl mx-auto border border-emerald-500/30 p-12 bg-black/60 text-center relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.1)_0%,transparent_70%)]" />
       <h3 className="text-3xl text-white mb-6 font-black uppercase tracking-widest relative z-10">
         Start_Project()
