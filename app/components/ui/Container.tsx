@@ -1,6 +1,5 @@
 import { cn } from "@/app/lib/cn";
 
-// Pozwalamy na przyjęcie wszystkich standardowych propsów diva (id, style, onClick itp.)
 type ContainerProps = React.ComponentProps<"div"> & {
   children: React.ReactNode;
 };
@@ -8,8 +7,14 @@ type ContainerProps = React.ComponentProps<"div"> & {
 export function Container({ className, children, ...props }: ContainerProps) {
   return (
     <div
-      className={cn("mx-auto w-full max-w-6xl px-6", className)}
-      {...props} // Przekazujemy id i inne propsy niżej
+      // ZMIANA:
+      // 1. max-w-[2000px] -> pozwala treści zająć prawie całą szerokość monitora
+      // 2. px-6 md:px-12 lg:px-16 -> duże marginesy boczne, żeby treść nie "kleiła się" do krawędzi
+      className={cn(
+        "mx-auto w-full max-w-[2000px] px-6 md:px-12 lg:px-16",
+        className
+      )}
+      {...props}
     >
       {children}
     </div>

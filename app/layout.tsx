@@ -1,10 +1,6 @@
-// app/layout.tsx
-
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-// DODANY IMPORT KOMPONENTU HEADER
-import { Header } from "./components/ui/Header";
 
 const geistSans = Geist({
   subsets: ["latin"],
@@ -15,11 +11,9 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
 });
 
-// Zaktualizowane meta-dane
 export const metadata: Metadata = {
-  title: "MyStudio - Kompleksowe Aplikacje Webowe",
-  description:
-    "Buduję skalowalne, bezpieczne i stabilne systemy end-to-end (React, Node.js, MongoDB). Od koncepcji po wdrożenie produkcyjne.",
+  title: "MyStudio - Research & Development",
+  description: "Digital Solutions Architect.",
 };
 
 export default function RootLayout({
@@ -30,12 +24,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-zinc-950`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#050505] text-zinc-300`}
       >
-        {/* DODANY KOMPONENT HEADER */}
-        <Header />
-
-        {/* Dzieci (page.tsx i inne strony) będą renderowane poniżej Header */}
+        {/* Usunęliśmy komponent <Header /> - nawigacja jest teraz boczna */}
         {children}
       </body>
     </html>
