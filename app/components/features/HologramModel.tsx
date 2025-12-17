@@ -18,14 +18,8 @@ function HologramPlane({ onEnter }: { onEnter: () => void }) {
   const meshRef = useRef<THREE.Mesh>(null!);
   const [hovered, setHovered] = useState(false);
 
-  // BEZPIECZNA ŚCIEŻKA:
-  // Używamy publicznego obrazka z Unsplash jako placeholder, żeby kod się nie wysypał.
-  // Jak już wrzucisz swój plik, zmień ten adres z powrotem na "/img/hologram-texture.png"
-  const textureUrl =
-    "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070&auto=format&fit=crop";
-  // const textureUrl = "/img/hologram-texture.png"; // <-- ODKOMENTUJ TO, JAK DODASZ PLIK
-
-  const texture = useLoader(THREE.TextureLoader, textureUrl);
+  // Ładowanie tekstury ze ścieżki public/img/holo-bg.jpg
+  const texture = useLoader(THREE.TextureLoader, "/img/holo-bg.jpg");
 
   useFrame((state) => {
     const t = state.clock.getElapsedTime();
@@ -43,7 +37,7 @@ function HologramPlane({ onEnter }: { onEnter: () => void }) {
         position={[0, 1.8, 0]}
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
-        onClick={onEnter}
+        onClick={onEnter} // Kliknięcie w model też wchodzi
       >
         {/* Zakrzywiona płaszczyzna (cylinder otwarty) */}
         <cylinderGeometry
@@ -55,7 +49,7 @@ function HologramPlane({ onEnter }: { onEnter: () => void }) {
           map={texture}
           emissiveMap={texture}
           emissive={"#00ffea"}
-          emissiveIntensity={hovered ? 3.0 : 2.0} // Jaśniej po najechaniu
+          emissiveIntensity={hovered ? 3.5 : 2.5} // Jaśniej po najechaniu
           toneMapped={false}
           transparent={true}
           opacity={0.95}
@@ -144,12 +138,11 @@ export const HologramModel = ({ onEnter }: { onEnter: () => void }) => {
           distance={5}
         />
 
-        {/* Suspense zapobiega białemu ekranowi podczas ładowania tekstury */}
         <React.Suspense
           fallback={
             <Html center>
-              <span className="text-cyan-500 font-mono animate-pulse tracking-widest">
-                LOADING SYSTEM...
+              <span className="text-cyan-500 font-mono animate-pulse">
+                LOADING TEXTURE...
               </span>
             </Html>
           }
@@ -177,7 +170,7 @@ export const HologramModel = ({ onEnter }: { onEnter: () => void }) => {
           rotateSpeed={0.5}
         />
 
-        <EffectComposer disableNormalPass>
+        <EffectComposer>
           <Bloom
             luminanceThreshold={0.1}
             mipmapBlur

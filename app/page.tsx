@@ -64,13 +64,18 @@ export default function Home() {
 
       default:
         // Dla pozostałych sekcji używamy wrappera
+        const menuKey = activeSection as
+          | "services"
+          | "about"
+          | "stack"
+          | "contact";
         return (
-          <MainContentWrapper title={CONTENT[lang].menu[activeSection]}>
+          <MainContentWrapper title={CONTENT[lang].menu[menuKey]}>
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              {activeSection === "services" && <Services lang={lang} />}
-              {activeSection === "about" && <About lang={lang} />}
-              {activeSection === "stack" && <Stack lang={lang} />}
-              {activeSection === "contact" && <Contact lang={lang} />}
+              {activeSection === "services" && <Services />}
+              {activeSection === "about" && <About />}
+              {activeSection === "stack" && <Stack />}
+              {activeSection === "contact" && <Contact />}
             </div>
           </MainContentWrapper>
         );

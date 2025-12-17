@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { Canvas, useFrame, extend, useThree } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Text, useTexture, Html } from "@react-three/drei";
 import * as THREE from "three";
 import { PROJECTS_DATA } from "@/app/components/data/ProjectsData";
-import { HolographicMaterialImpl } from "./HolographicMaterial";
+// Import materiału - extend() jest już wywołane w HolographicMaterial.tsx
+import "./HolographicMaterial";
 import {
   EffectComposer,
   Bloom,
@@ -17,14 +18,15 @@ import { easing } from "maath";
 import { useDrag } from "@use-gesture/react";
 import { ShieldCheck, Hand, ArrowRight } from "lucide-react";
 import { HoloBackground } from "./HoloBackground";
+import { HoloParticles } from "./HoloParticles";
+import { HoloFrame } from "./HoloFrame";
 
-// Rejestracja materiału
-extend({ HolographicMaterialImpl });
+// Materiał jest już zarejestrowany w HolographicMaterial.tsx
 
 const projectsList = Object.values(PROJECTS_DATA);
 const RADIUS = 8.5;
 
-// --- KARTA PROJEKTU ---
+// --- KARTA PROJEKTU Z RAMKĄ ---
 function HoloCard({
   project,
   index,
@@ -32,22 +34,36 @@ function HoloCard({
   onClick,
   isGranted,
   glitchIntensity,
+  activeIndex,
 }: any) {
+  const groupRef = useRef<THREE.Group>(null!);
   const meshRef = useRef<THREE.Mesh>(null!);
   const materialRef = useRef<any>(null!);
   const [hovered, setHovered] = useState(false);
+  const [texture, setTexture] = useState<THREE.Texture | null>(null);
 
   const count = projectsList.length;
   const angle = (index / count) * Math.PI * 2;
 
-  const textureUrl =
-    project.images && project.images.length > 0
-      ? project.images[0].src
-      : "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop";
-
-  const texture = useTexture(textureUrl);
+  // Ładowanie tekstury - UŻYWAMY HOLOGRAM-CARDS.JPG!
+  React.useEffect(() => {
+    const loader = new THREE.TextureLoader();
+    loader.load(
+      "/img/hologram-cards.jpg",
+      (loadedTexture) => {
+        console.log("✅ Tekstura załadowana:", "/img/hologram-cards.jpg");
+        setTexture(loadedTexture);
+      },
+      undefined,
+      (error) => {
+        console.error("❌ Błąd ładowania tekstury:", error);
+      }
+    );
+  }, []);
 
   useFrame((state, delta) => {
+    if (!groupRef.current || !meshRef.current) return;
+
     // Obliczanie pozycji na kole
     const finalAngle = angle + currentRotation;
     const x = Math.sin(finalAngle) * RADIUS;
@@ -58,50 +74,60 @@ function HoloCard({
     if (normAngle < -Math.PI) normAngle += Math.PI * 2;
 
     const distanceFromCenter = Math.abs(normAngle);
-    // Karty po bokach są widoczne (min 0.3)
-    const isActive = Math.max(0.3, 1 - distanceFromCenter * 0.7);
-    const isCenter = distanceFromCenter < 0.2;
+    const isCenter = distanceFromCenter < 0.3;
 
     // Ruch
-    meshRef.current.position.set(x, 0, z);
-    meshRef.current.rotation.y = finalAngle;
+    groupRef.current.position.set(x, 0, z);
+    groupRef.current.rotation.y = finalAngle;
 
     // Shader Update
     if (materialRef.current) {
       materialRef.current.uTime = state.clock.elapsedTime;
 
-      // Kolory (Twoje ulubione Additive Blending sprawi, że będą świecić)
+      // Kolory - bardziej widoczne
       const activeColor =
         isGranted && isCenter
           ? new THREE.Color("#00ff88")
-          : new THREE.Color("#00ccff");
-      const inactiveColor = new THREE.Color("#0033aa");
+          : new THREE.Color("#00ddff");
+      const inactiveColor = new THREE.Color("#0066cc");
 
       const finalColor = new THREE.Color().lerpColors(
         inactiveColor,
         activeColor,
-        isCenter ? 1.0 : 0.0
+        isCenter ? 1.0 : 0.3
       );
 
       easing.dampC(materialRef.current.uColor, finalColor, 0.2, delta);
       easing.damp(
         materialRef.current,
         "uHover",
-        hovered ? 1.0 : 0.0,
+        hovered || isCenter ? 1.0 : 0.0,
         0.2,
         delta
       );
 
-      // Opacity - zawsze widoczne (min 0.5)
-      const targetOpacity = isCenter ? 1.0 : 0.5;
+      // Opacity - MAKSYMALNA WIDOCZNOŚĆ!
+      const targetOpacity = isCenter ? 1.0 : 0.9;
       easing.damp(materialRef.current, "uOpacity", targetOpacity, 0.2, delta);
 
       materialRef.current.uGlitch = glitchIntensity;
     }
   });
 
+  const isActive = index === activeIndex;
+
   return (
-    <group>
+    <group ref={groupRef}>
+      {/* HOLOGRAFICZNA RAMKA */}
+      <HoloFrame
+        width={5.4}
+        height={3.6}
+        position={[0, 0, -0.05]}
+        color={isActive ? "#00ffea" : "#0088cc"}
+        isActive={isActive || hovered}
+      />
+
+      {/* KARTA Z OBRAZEM */}
       <mesh
         ref={meshRef}
         onClick={(e) => {
@@ -113,17 +139,37 @@ function HoloCard({
       >
         <planeGeometry args={[5.2, 3.4, 30, 30]} />
 
-        {/* PRZYWRACAMY BLENDING, KTÓRY CI SIĘ PODOBAŁ + NOWY SHADER */}
-        {/* @ts-ignore */}
-        <holographicMaterialImpl
-          ref={materialRef}
-          uTexture={texture}
-          transparent
-          side={THREE.DoubleSide}
-          blending={THREE.AdditiveBlending} // TO SPRAWIA ŻE ŚWIECI
-          depthWrite={false}
-        />
+        {texture ? (
+          /* @ts-ignore */
+          <holographicMaterialImpl
+            ref={materialRef}
+            uTexture={texture}
+            transparent
+            side={THREE.DoubleSide}
+            blending={THREE.NormalBlending}
+            depthWrite={true}
+          />
+        ) : (
+          <meshStandardMaterial
+            color="#00ffea"
+            emissive="#00ffea"
+            emissiveIntensity={2}
+            side={THREE.DoubleSide}
+            transparent
+            opacity={0.8}
+          />
+        )}
       </mesh>
+
+      {/* Dodatkowe światło dla aktywnej karty */}
+      {isActive && (
+        <pointLight
+          position={[0, 0, 1]}
+          color="#00ffea"
+          intensity={3}
+          distance={4}
+        />
+      )}
     </group>
   );
 }
@@ -169,15 +215,13 @@ const SpinningCarousel = ({ onSelect }: { onSelect: () => void }) => {
 
   useFrame((state, delta) => {
     const smoothTime = isDragging ? 0.05 : 0.4;
-    easing.damp(
-      { val: rotation },
-      "val",
+    const newRotation = THREE.MathUtils.damp(
+      rotation,
       targetRotation,
       smoothTime,
-      delta,
-      undefined,
-      (v) => setRotation(v)
+      delta
     );
+    setRotation(newRotation);
 
     let index = Math.round(-rotation / anglePerCard) % count;
     if (index < 0) index += count;
@@ -221,6 +265,7 @@ const SpinningCarousel = ({ onSelect }: { onSelect: () => void }) => {
           onClick={handleCardClick}
           isGranted={accessState === "granted" && i === activeIndex}
           glitchIntensity={glitchIntensity.current}
+          activeIndex={activeIndex}
         />
       ))}
 
@@ -269,44 +314,63 @@ const SpinningCarousel = ({ onSelect }: { onSelect: () => void }) => {
 // --- GŁÓWNY KOMPONENT ---
 export const HoloCarousel = ({ onSelect }: { onSelect: () => void }) => {
   return (
-    <div className="w-full h-screen bg-black relative animate-in fade-in duration-1000 cursor-grab active:cursor-grabbing">
-      <Canvas dpr={[1, 1.5]} camera={{ position: [0, 2, 14], fov: 40 }}>
-        {/* TŁO */}
-        <React.Suspense
-          fallback={<color attach="background" args={["#000510"]} />}
-        >
+    <div className="w-full h-screen relative animate-in fade-in duration-1000 cursor-grab active:cursor-grabbing">
+      <Canvas dpr={[1, 1.5]} camera={{ position: [0, 2, 12], fov: 45 }}>
+        {/* HOLOGRAFICZNY POKÓJ 3D Z HOLO-BG.JPG */}
+        <React.Suspense fallback={null}>
           <HoloBackground />
         </React.Suspense>
 
-        {/* KARTY */}
+        {/* KARTY - BEZ SUSPENSE! */}
+        <SpinningCarousel onSelect={onSelect} />
+
+        {/* PARTICLE EFFECTS - WIĘCEJ CZĄSTECZEK! */}
         <React.Suspense fallback={null}>
-          <SpinningCarousel onSelect={onSelect} />
+          <HoloParticles count={400} radius={RADIUS * 1.5} color="#00ffea" />
+          <HoloParticles count={200} radius={RADIUS * 0.8} color="#ff00ea" />
         </React.Suspense>
 
-        {/* EFEKTY */}
-        <EffectComposer disableNormalPass>
+        {/* EFEKTY POST-PROCESSING - MOCNIEJSZE! */}
+        <EffectComposer>
           <Bloom
-            luminanceThreshold={0.1}
+            luminanceThreshold={0.05}
             mipmapBlur
-            intensity={2.0}
-            radius={0.5}
+            intensity={3.5}
+            radius={0.8}
           />
           <ChromaticAberration
-            offset={new THREE.Vector2(0.002, 0.002)}
-            radialModulation={false}
-            modulationOffset={0}
+            offset={new THREE.Vector2(0.005, 0.005)}
+            radialModulation={true}
+            modulationOffset={0.3}
           />
-          <Noise opacity={0.06} />
-          <Vignette eskil={false} offset={0.1} darkness={0.7} />
+          <Noise opacity={0.12} />
+          <Vignette eskil={false} offset={0.15} darkness={0.8} />
         </EffectComposer>
 
-        <ambientLight intensity={2.0} />
+        {/* MOCNE ŚWIATŁO - karty muszą być widoczne! */}
+        <ambientLight intensity={4.0} />
+        <directionalLight
+          position={[0, 5, 10]}
+          intensity={2.5}
+          color="#00ddff"
+        />
+        <directionalLight
+          position={[0, -5, -10]}
+          intensity={1.5}
+          color="#0088ff"
+        />
+        <pointLight
+          position={[0, 0, 0]}
+          intensity={2}
+          color="#00ffea"
+          distance={20}
+        />
       </Canvas>
 
       <div className="absolute bottom-8 w-full flex justify-center opacity-40 animate-pulse pointer-events-none">
         <Hand className="text-cyan-500" size={32} />
         <span className="ml-4 text-cyan-500 font-mono text-xs tracking-widest mt-2">
-          INTERACTIVE 3D SYSTEM
+          INTERACTIVE 3D HOLOGRAPHIC SYSTEM
         </span>
       </div>
     </div>

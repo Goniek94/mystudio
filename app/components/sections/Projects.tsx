@@ -403,7 +403,7 @@ export function Projects({ lang }: { lang: Language }) {
   const [viewMode, setViewMode] = useState<"carousel" | "details">("carousel");
 
   return (
-    <section className="relative min-h-screen w-full bg-black">
+    <section className="relative min-h-screen w-full">
       {/* 1. KARUZELA 3D (Hologramy) */}
       {viewMode === "carousel" && (
         <div className="relative w-full h-screen z-10">

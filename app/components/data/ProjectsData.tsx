@@ -25,7 +25,6 @@ export const PROJECTS_DATA = {
       pl: "Kompleksowa platforma ogłoszeniowa dla branży automotive. System łączy sprzedających i kupujących w jeden skalowalny ekosystem.",
       en: "A full-scale automotive marketplace platform designed and implemented from scratch.",
     },
-    // Rozbudowane sekcje do wykorzystania w zakładkach (Tabs)
     fullDetails: {
       about: {
         title: { pl: "O PROJEKCIE", en: "ABOUT PROJECT" },
