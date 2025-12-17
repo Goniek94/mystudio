@@ -4,8 +4,6 @@ import React, { useState, useMemo } from "react";
 import { cn } from "@/app/lib/cn";
 import { MatrixBackground } from "@/app/components/ui/MatrixBackground";
 import { Logo } from "@/app/components/ui/Logo";
-
-// Importy komponentów
 import { CONTENT, Language } from "@/app/lib/ui-content";
 import { MainContentWrapper } from "@/app/components/ui/MainContentWrapper";
 import { Hero } from "@/app/components/sections/Hero";
@@ -27,7 +25,9 @@ export default function Home() {
   const [activeSection, setActiveSection] = useState<SectionId>("home");
   const [lang, setLang] = useState<Language>("pl");
 
-  // OPTYMALIZACJA 1: Memoizacja menu, aby nie przeliczało się przy zmianie activeSection
+  // Sprawdzamy, czy jesteśmy w projektach
+  const isProjects = activeSection === "projects";
+
   const MENU_ITEMS = useMemo(
     () => [
       { id: "home", label: CONTENT[lang].menu.home },
@@ -38,10 +38,8 @@ export default function Home() {
       { id: "contact", label: CONTENT[lang].menu.contact },
     ],
     [lang]
-  ); // Przelicz tylko gdy zmieni się język
+  );
 
-  // OPTYMALIZACJA 2: Funkcja renderująca zamiast "drabinki" ternary operators
-  // NAPRAWA BŁĘDU: Przekazujemy 'lang' do każdego komponentu
   const renderSection = () => {
     switch (activeSection) {
       case "home":
@@ -53,17 +51,13 @@ export default function Home() {
             />
           </div>
         );
-
       case "projects":
         return (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 w-full">
-            {/* Tutaj był błąd - brakowało propsa lang */}
             <Projects lang={lang} />
           </div>
         );
-
       default:
-        // Dla pozostałych sekcji używamy wrappera
         const menuKey = activeSection as
           | "services"
           | "about"
@@ -84,16 +78,18 @@ export default function Home() {
 
   return (
     <main className="relative min-h-screen w-full text-zinc-300 font-mono overflow-hidden selection:bg-emerald-500/30 selection:text-emerald-200">
-      <MatrixBackground />
-      <div className="fixed inset-0 bg-black/85 -z-10 backdrop-blur-[2px]" />
+      {/* 1. WAŻNE: Renderujemy Matrixa TYLKO, gdy NIE jesteśmy w projektach */}
+      {!isProjects && <MatrixBackground />}
+
+      {/* 2. WAŻNE: Czarną zasłonę też zdejmujemy w projektach, żeby było widać 3D */}
+      {!isProjects && (
+        <div className="fixed inset-0 bg-black/85 -z-10 backdrop-blur-[2px]" />
+      )}
 
       <div className="relative z-10 mx-auto w-full min-h-screen grid grid-cols-1 md:grid-cols-[280px_1fr] lg:grid-cols-[340px_1fr]">
-        {/* SIDEBAR */}
         <aside className="relative md:h-screen md:sticky md:top-0 flex flex-col justify-between p-6 md:p-10 border-r border-emerald-500/20 bg-black/20 backdrop-blur-md z-20">
           <div>
             <Logo className="mb-12" />
-
-            {/* Language Switcher */}
             <div className="flex items-center gap-4 mb-8 text-xs font-bold tracking-widest font-mono">
               {(["pl", "en"] as const).map((l) => (
                 <button
@@ -114,7 +110,6 @@ export default function Home() {
               </span>
             </div>
           </div>
-
           <nav className="mt-4 md:mt-0">
             <ul className="flex flex-col gap-3">
               {MENU_ITEMS.map((item) => (
@@ -143,7 +138,6 @@ export default function Home() {
               ))}
             </ul>
           </nav>
-
           <div className="hidden md:block text-[9px] text-zinc-600 border-t border-emerald-500/20 pt-6">
             <div className="flex justify-between items-center mb-1">
               <span>STATUS:</span>
@@ -152,10 +146,7 @@ export default function Home() {
           </div>
         </aside>
 
-        {/* MAIN CONTENT AREA */}
         <section className="relative w-full h-screen overflow-y-auto overflow-x-hidden flex flex-col scroll-smooth">
-          <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent z-50" />
-
           <div className="flex-grow flex flex-col">{renderSection()}</div>
         </section>
       </div>
