@@ -14,14 +14,16 @@ import {
   ChevronRight,
   Terminal as TerminalIcon,
   Zap,
+  ArrowLeft,
 } from "lucide-react";
 import { cn } from "@/app/lib/cn";
 import { BackendTerminal } from "@/app/components/features/BackendTerminal";
+// IMPORTUJEMY NOWĄ KARUZELĘ
+import { HoloCarousel } from "@/app/components/features/HoloCarousel";
 
-// Definicja typu języka
 type Language = "pl" | "en";
 
-// --- GALERIA ZDJĘĆ ---
+// --- DANE (Twoje dane, bez zmian) ---
 const MARKETPLACE_IMAGES = [
   {
     src: "/img/marketplace/Ogłoszenia.webp",
@@ -78,7 +80,6 @@ const MARKETPLACE_IMAGES = [
   },
 ];
 
-// --- LEWA KOLUMNA ---
 const FEATURES_DATA = {
   en: [
     { icon: Globe, title: "Modern SPA", desc: "React 18, TypeScript, Next.js" },
@@ -106,15 +107,13 @@ const FEATURES_DATA = {
   ],
 };
 
+// --- KARTA SZCZEGÓŁÓW (Twoja implementacja bez zmian) ---
 function AutomotiveProjectCard({ lang }: { lang: Language }) {
   const [viewMode, setViewMode] = useState<"showroom" | "engine">("showroom");
-
-  // -- Showroom State --
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
-  // Auto-rotation (Showroom)
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isAutoPlaying && viewMode === "showroom" && !lightboxOpen) {
@@ -141,8 +140,7 @@ function AutomotiveProjectCard({ lang }: { lang: Language }) {
 
   return (
     <>
-      <div className="relative rounded-2xl border border-white/10 bg-zinc-950 overflow-hidden shadow-2xl mt-8 mb-20 group/card">
-        {/* HEADER */}
+      <div className="relative rounded-2xl border border-white/10 bg-zinc-950 overflow-hidden shadow-2xl mt-8 mb-20 group/card animate-in fade-in slide-in-from-bottom-8 duration-700">
         <div className="border-b border-white/10 bg-zinc-900/50 p-4 flex flex-col sm:flex-row justify-between items-center gap-4 backdrop-blur-sm relative z-20">
           <div className="flex gap-2 p-1 bg-black/40 rounded-lg border border-white/5">
             <button
@@ -181,9 +179,7 @@ function AutomotiveProjectCard({ lang }: { lang: Language }) {
           </div>
         </div>
 
-        {/* CONTENT GRID */}
         <div className="grid lg:grid-cols-2 min-h-[600px]">
-          {/* LEWA KOLUMNA */}
           <div className="p-6 md:p-8 border-r border-white/5 bg-gradient-to-b from-zinc-900/20 to-black flex flex-col relative z-10">
             <h3
               className={cn(
@@ -235,7 +231,6 @@ function AutomotiveProjectCard({ lang }: { lang: Language }) {
             </div>
           </div>
 
-          {/* PRAWA KOLUMNA */}
           <div className="relative bg-black flex flex-col overflow-hidden h-full min-h-[500px]">
             <div
               className="absolute inset-0 opacity-20 pointer-events-none"
@@ -246,7 +241,6 @@ function AutomotiveProjectCard({ lang }: { lang: Language }) {
             />
 
             {viewMode === "showroom" ? (
-              // --- SHOWROOM ---
               <div
                 className="relative w-full h-full flex flex-col group/gallery"
                 onMouseEnter={() => setIsAutoPlaying(false)}
@@ -296,7 +290,6 @@ function AutomotiveProjectCard({ lang }: { lang: Language }) {
                   </div>
                 </div>
 
-                {/* Nawigacja */}
                 <div className="absolute top-4 left-0 right-0 flex justify-center gap-1.5 z-20">
                   {MARKETPLACE_IMAGES.map((_, idx) => (
                     <button
@@ -329,8 +322,6 @@ function AutomotiveProjectCard({ lang }: { lang: Language }) {
                 </button>
               </div>
             ) : (
-              // --- ENGINE ROOM (BACKEND TERMINAL) ---
-              // Tutaj wstawiamy nasz nowy komponent!
               <BackendTerminal lang={lang} />
             )}
           </div>
@@ -378,8 +369,6 @@ function AutomotiveProjectCard({ lang }: { lang: Language }) {
           </div>
         </div>
       )}
-
-      {/* Global Styles */}
       <style jsx global>{`
         @keyframes progress-bar {
           0% {
@@ -409,47 +398,78 @@ function AutomotiveProjectCard({ lang }: { lang: Language }) {
   );
 }
 
-// --- GŁÓWNA SEKCJA ---
+// --- GŁÓWNA SEKCJA (ZINTEGROWANA) ---
 export function Projects({ lang }: { lang: Language }) {
+  const [viewMode, setViewMode] = useState<"carousel" | "details">("carousel");
+
   return (
-    <section className="w-full max-w-[1600px] mx-auto p-6 md:p-12 lg:p-20 xl:p-24 relative min-h-screen flex flex-col justify-center">
-      <div className="mb-16">
-        <h2 className="text-4xl md:text-6xl font-bold text-white mb-6">
-          {lang === "pl" ? "Wybrane " : "Featured "}
-          <span className="text-emerald-500">
-            {lang === "pl" ? "Projekty" : "Projects"}
-          </span>
-        </h2>
-        <div className="h-1 w-20 bg-emerald-500 rounded-full mb-8" />
-        <p className="text-gray-400 max-w-2xl text-lg">
-          {lang === "pl"
-            ? "Realizacje komercyjne łączące zaawansowaną inżynierię backendową z nowoczesnym frontendem."
-            : "Commercial implementations combining advanced backend engineering with modern frontend."}
-        </p>
-      </div>
+    <section className="relative min-h-screen w-full bg-black">
+      {/* 1. KARUZELA 3D (Hologramy) */}
+      {viewMode === "carousel" && (
+        <div className="relative w-full h-screen z-10">
+          <HoloCarousel onSelect={() => setViewMode("details")} />
 
-      <div className="space-y-32">
-        <div>
-          <div className="flex items-center gap-3 mb-6">
-            <span className="px-3 py-1 text-[10px] font-mono border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 rounded-full animate-pulse uppercase">
-              COMMERCIAL PRODUCT
-            </span>
-            <span className="px-3 py-1 text-[10px] font-mono border border-red-500/30 bg-red-500/10 text-red-400 rounded-full flex items-center gap-2 uppercase">
-              <Lock size={10} /> NDA PROTECTED
-            </span>
-          </div>
-          <h3 className="text-3xl font-bold text-white mb-4">
-            Automotive Marketplace
-          </h3>
-          <p className="text-gray-400 max-w-3xl mb-8 leading-relaxed">
-            {lang === "pl"
-              ? "Kompleksowa platforma ogłoszeniowa zaprojektowana i wdrożona od zera jako produkt komercyjny. System łączy sprzedających i kupujących w jeden skalowalny ekosystem."
-              : "A full-scale automotive marketplace platform designed and implemented from scratch as a commercial product. The system connects sellers and buyers in a single, scalable ecosystem."}
-          </p>
-
-          <AutomotiveProjectCard lang={lang} />
+          {/* Opcjonalny przycisk pominięcia */}
+          <button
+            onClick={() => setViewMode("details")}
+            className="absolute bottom-8 left-1/2 -translate-x-1/2 text-[10px] text-zinc-600 hover:text-cyan-500 uppercase tracking-widest transition-colors z-20"
+          >
+            [ SKIP TO LIST ]
+          </button>
         </div>
-      </div>
+      )}
+
+      {/* 2. SZCZEGÓŁY PROJEKTU */}
+      {viewMode === "details" && (
+        <div className="w-full max-w-[1600px] mx-auto p-6 md:p-12 lg:p-20 xl:p-24 animate-in fade-in slide-in-from-bottom-10 duration-700">
+          {/* Przycisk powrotu do hologramów */}
+          <button
+            onClick={() => setViewMode("carousel")}
+            className="fixed bottom-8 right-8 z-50 flex items-center gap-2 bg-black/80 backdrop-blur border border-cyan-500/30 text-cyan-400 px-4 py-2 rounded-full text-xs font-mono uppercase hover:bg-cyan-500/10 hover:border-cyan-500 transition-all shadow-lg"
+          >
+            <ArrowLeft size={14} />{" "}
+            {lang === "pl" ? "Wróć do hologramów" : "Back to Holo-View"}
+          </button>
+
+          <div className="mb-16">
+            <h2 className="text-4xl md:text-6xl font-bold text-white mb-6">
+              {lang === "pl" ? "Wybrane " : "Featured "}
+              <span className="text-emerald-500">
+                {lang === "pl" ? "Projekty" : "Projects"}
+              </span>
+            </h2>
+            <div className="h-1 w-20 bg-emerald-500 rounded-full mb-8" />
+            <p className="text-gray-400 max-w-2xl text-lg">
+              {lang === "pl"
+                ? "Realizacje komercyjne łączące zaawansowaną inżynierię backendową z nowoczesnym frontendem."
+                : "Commercial implementations combining advanced backend engineering with modern frontend."}
+            </p>
+          </div>
+
+          <div className="space-y-32">
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <span className="px-3 py-1 text-[10px] font-mono border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 rounded-full animate-pulse uppercase">
+                  COMMERCIAL PRODUCT
+                </span>
+                <span className="px-3 py-1 text-[10px] font-mono border border-red-500/30 bg-red-500/10 text-red-400 rounded-full flex items-center gap-2 uppercase">
+                  <Lock size={10} /> NDA PROTECTED
+                </span>
+              </div>
+              <h3 className="text-3xl font-bold text-white mb-4">
+                Automotive Marketplace
+              </h3>
+              <p className="text-gray-400 max-w-3xl mb-8 leading-relaxed">
+                {lang === "pl"
+                  ? "Kompleksowa platforma ogłoszeniowa zaprojektowana i wdrożona od zera jako produkt komercyjny. System łączy sprzedających i kupujących w jeden skalowalny ekosystem."
+                  : "A full-scale automotive marketplace platform designed and implemented from scratch as a commercial product. The system connects sellers and buyers in a single, scalable ecosystem."}
+              </p>
+
+              <AutomotiveProjectCard lang={lang} />
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
