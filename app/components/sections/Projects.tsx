@@ -1,38 +1,27 @@
 "use client";
 
 import React, { useState } from "react";
-import { HoloCarousel } from "@/app/components/features/HoloCarousel";
-import { ProjectDetails } from "@/app/components/sections/ProjectDetails"; // Importujemy to, co stworzyliśmy wyżej
+import { HologramGallery } from "@/app/components/features/HologramGallery";
+import { ProjectDetails } from "@/app/components/sections/ProjectDetails";
 
-type Language = "pl" | "en";
+export function Projects({ lang }: { lang: "pl" | "en" }) {
+  const [viewMode, setViewMode] = useState<"lobby" | "details">("lobby");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
-export function Projects({ lang }: { lang: Language }) {
-  // Stan decyduje: albo Lobby (carousel), albo Szczegóły (details)
-  const [viewMode, setViewMode] = useState<"carousel" | "details">("carousel");
+  const handleSelect = (id: string) => {
+    setSelectedId(id);
+    setViewMode("details");
+  };
 
   return (
-    <section className="relative min-h-screen w-full">
-      {/* 1. WIDOK LOBBY (HOLOGRAMY) */}
-      {viewMode === "carousel" && (
-        <div className="relative w-full h-screen z-10">
-          {/* Po kliknięciu karty (onSelect) przełączamy na 'details' */}
-          <HoloCarousel onSelect={() => setViewMode("details")} />
-
-          {/* Przycisk awaryjny / szybkie przejście */}
-          <button
-            onClick={() => setViewMode("details")}
-            className="absolute bottom-8 left-1/2 -translate-x-1/2 text-[10px] text-zinc-600 hover:text-cyan-500 uppercase tracking-widest transition-colors z-20"
-          >
-            [ SKIP TO LIST ]
-          </button>
-        </div>
-      )}
-
-      {/* 2. WIDOK PROJEKTU (DOCELOWY) */}
-      {viewMode === "details" && (
+    <section className="relative min-h-screen w-full overflow-hidden bg-black">
+      {viewMode === "lobby" ? (
+        <HologramGallery lang={lang} onEnterProject={handleSelect} />
+      ) : (
         <ProjectDetails
+          projectId={selectedId}
           lang={lang}
-          onBack={() => setViewMode("carousel")} // Przekazujemy funkcję powrotu
+          onBack={() => setViewMode("lobby")}
         />
       )}
     </section>
