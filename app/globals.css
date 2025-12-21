@@ -66,3 +66,37 @@ body {
     opacity: 0;
   }
 }
+
+/* 4. HOLOGRAM SCAN LINE ANIMATION */
+@keyframes scan {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 100%;
+  }
+}
+
+/* 5. FADE IN ANIMATION */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-in-out;
+}
+
+/* 6. SHIMMER ANIMATION FOR HOLOGRAPHIC CARDS */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
